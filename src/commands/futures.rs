@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use clap::Subcommand;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use super::helpers::{confirm_destructive, jstr, parse_generic};
 use crate::client::FuturesClient;
@@ -352,7 +352,10 @@ pub(crate) async fn execute(
             validate_path_segment(symbol, "symbol")?;
             let endpoint = format!("tickers/{symbol}");
             let data = client.public_get(&endpoint, &[], verbose).await?;
-            Ok(parse_ticker(&data))
+            let orderbook = client
+                .public_get("orderbook", &[("symbol", symbol.as_str())], verbose)
+                .await?;
+            Ok(parse_ticker_with_orderbook(&data, &orderbook))
         }
         FuturesCommand::Orderbook { symbol } => {
             validate_path_segment(symbol, "symbol")?;
@@ -1208,6 +1211,75 @@ fn parse_ticker(data: &Value) -> CommandOutput {
     CommandOutput::new(data.clone(), headers, rows)
 }
 
+/// Parse single-ticker detail output with top-of-book levels.
+fn parse_ticker_with_orderbook(ticker_data: &Value, orderbook_data: &Value) -> CommandOutput {
+    let ticker = ticker_data.get("ticker").unwrap_or(ticker_data);
+    let mut pairs = vec![
+        ("Symbol".into(), jstr(ticker, "symbol")),
+        ("Last".into(), jstr(ticker, "last")),
+        ("Bid".into(), jstr(ticker, "bid")),
+        ("Ask".into(), jstr(ticker, "ask")),
+        ("Vol24h".into(), jstr(ticker, "vol24h")),
+    ];
+
+    for (idx, level) in extract_orderbook_levels(orderbook_data, "asks", 5)
+        .into_iter()
+        .enumerate()
+    {
+        pairs.push((format!("Ask L{}", idx + 1), level));
+    }
+    for (idx, level) in extract_orderbook_levels(orderbook_data, "bids", 5)
+        .into_iter()
+        .enumerate()
+    {
+        pairs.push((format!("Bid L{}", idx + 1), level));
+    }
+
+    let orderbook = orderbook_data
+        .get("orderBook")
+        .or_else(|| orderbook_data.get("order_book"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let json_data = match ticker_data {
+        Value::Object(obj) => {
+            let mut merged = obj.clone();
+            merged.insert("orderbook".into(), orderbook);
+            Value::Object(merged)
+        }
+        other => json!({
+            "ticker": other,
+            "orderbook": orderbook,
+        }),
+    };
+
+    CommandOutput::key_value(pairs, json_data)
+}
+
+fn extract_orderbook_levels(data: &Value, side: &str, limit: usize) -> Vec<String> {
+    data.get("orderBook")
+        .or_else(|| data.get("order_book"))
+        .and_then(|v| v.get(side))
+        .and_then(|v| v.as_array())
+        .map(|levels| {
+            levels
+                .iter()
+                .take(limit)
+                .filter_map(|level| {
+                    let arr = level.as_array()?;
+                    if arr.len() < 2 {
+                        return None;
+                    }
+                    Some(format!(
+                        "{} x {}",
+                        value_to_string(&arr[0]),
+                        value_to_string(&arr[1])
+                    ))
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// Parse tickers response (GET tickers) into Symbol | Last | Bid | Ask | Vol24h table.
 fn parse_tickers(data: &Value) -> CommandOutput {
     let headers = vec![
@@ -1546,5 +1618,31 @@ mod tests {
     fn build_history_params_empty() {
         let params = build_history_params(None, None, None);
         assert!(params.is_empty());
+    }
+
+    #[test]
+    fn parse_ticker_with_orderbook_includes_book_levels() {
+        let ticker = json!({
+            "ticker": {
+                "symbol": "PI_XBTUSD",
+                "last": "65000.0",
+                "bid": "64990.0",
+                "ask": "65010.0",
+                "vol24h": "1234.5"
+            }
+        });
+        let orderbook = json!({
+            "orderBook": {
+                "asks": [["65010.0", "2.5"], ["65020.0", "1.0"]],
+                "bids": [["64990.0", "3.0"], ["64980.0", "4.0"]]
+            }
+        });
+
+        let output = parse_ticker_with_orderbook(&ticker, &orderbook);
+
+        assert_eq!(output.headers, vec!["Field", "Value"]);
+        assert!(output.rows.contains(&vec!["Ask L1".into(), "65010.0 x 2.5".into()]));
+        assert!(output.rows.contains(&vec!["Bid L2".into(), "64980.0 x 4.0".into()]));
+        assert_eq!(output.data["orderbook"]["asks"][0][0], "65010.0");
     }
 }
