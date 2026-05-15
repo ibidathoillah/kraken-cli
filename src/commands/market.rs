@@ -184,8 +184,19 @@ pub(crate) async fn execute(
                 params.push(("asset_class", ac.as_str()));
             }
             let data = client.public_get("Ticker", &params, verbose).await?;
-            let (headers, rows) = parse_ticker_table(&data);
-            Ok(CommandOutput::new(data, headers, rows))
+
+            if pairs.len() == 1 {
+                let pair = &pairs[0];
+                let mut ob_params = vec![("pair", pair.as_str()), ("count", "5")];
+                if let Some(ac) = asset_class {
+                    ob_params.push(("asset_class", ac.as_str()));
+                }
+                let ob_data = client.public_get("Depth", &ob_params, verbose).await?;
+                Ok(parse_ticker_table_with_orderbook(&data, &ob_data, pair))
+            } else {
+                let (headers, rows) = parse_ticker_table(&data);
+                Ok(CommandOutput::new(data, headers, rows))
+            }
         }
         MarketCommand::Ohlc {
             pair,
@@ -382,6 +393,104 @@ fn parse_ticker_table(data: &Value) -> (Vec<String>, Vec<Vec<String>>) {
     (headers, rows)
 }
 
+fn parse_ticker_table_with_orderbook(
+    ticker_data: &Value,
+    orderbook_data: &Value,
+    pair: &str,
+) -> CommandOutput {
+    let ticker = ticker_data
+        .get(pair)
+        .or_else(|| ticker_data.as_object().and_then(|obj| obj.values().next()))
+        .unwrap_or(ticker_data);
+
+    let ask = ticker
+        .get("a")
+        .and_then(|a| a.get(0))
+        .and_then(|v| v.as_str())
+        .unwrap_or("-");
+    let bid = ticker
+        .get("b")
+        .and_then(|a| a.get(0))
+        .and_then(|v| v.as_str())
+        .unwrap_or("-");
+    let last = ticker
+        .get("c")
+        .and_then(|a| a.get(0))
+        .and_then(|v| v.as_str())
+        .unwrap_or("-");
+    let vol = ticker
+        .get("v")
+        .and_then(|a| a.get(1))
+        .and_then(|v| v.as_str())
+        .unwrap_or("-");
+
+    let mut pairs = vec![
+        ("Pair".into(), pair.to_string()),
+        ("Ask".into(), ask.to_string()),
+        ("Bid".into(), bid.to_string()),
+        ("Last".into(), last.to_string()),
+        ("Volume (24h)".into(), vol.to_string()),
+    ];
+
+    for (idx, level) in extract_orderbook_levels(orderbook_data, pair, "asks", 5)
+        .into_iter()
+        .enumerate()
+    {
+        pairs.push((format!("Ask L{}", idx + 1), level));
+    }
+    for (idx, level) in extract_orderbook_levels(orderbook_data, pair, "bids", 5)
+        .into_iter()
+        .enumerate()
+    {
+        pairs.push((format!("Bid L{}", idx + 1), level));
+    }
+
+    let orderbook = orderbook_data
+        .get(pair)
+        .or_else(|| {
+            orderbook_data
+                .as_object()
+                .and_then(|obj| obj.values().next())
+        })
+        .cloned()
+        .unwrap_or(Value::Null);
+
+    let json_data = match ticker_data {
+        Value::Object(obj) => {
+            let mut merged = obj.clone();
+            merged.insert("orderbook".into(), orderbook);
+            Value::Object(merged)
+        }
+        other => serde_json::json!({
+            "ticker": other,
+            "orderbook": orderbook,
+        }),
+    };
+
+    CommandOutput::key_value(pairs, json_data)
+}
+
+fn extract_orderbook_levels(data: &Value, pair: &str, side: &str, limit: usize) -> Vec<String> {
+    data.get(pair)
+        .or_else(|| data.as_object().and_then(|obj| obj.values().next()))
+        .and_then(|v| v.get(side))
+        .and_then(|v| v.as_array())
+        .map(|levels| {
+            levels
+                .iter()
+                .take(limit)
+                .filter_map(|level| {
+                    let arr = level.as_array()?;
+                    if arr.len() < 2 {
+                        return None;
+                    }
+                    Some(format!("{} x {}", jval(&arr[0]), jval(&arr[1])))
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 fn parse_ohlc_table(data: &Value, pair: &str) -> (Vec<String>, Vec<Vec<String>>) {
     let headers = vec![
         "Time".into(),
@@ -534,5 +643,30 @@ mod tests {
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("L3 orderbook requires authentication"));
+    }
+
+    #[test]
+    fn parse_ticker_with_orderbook_includes_book_levels() {
+        let ticker = serde_json::json!({
+            "XXBTZUSD": {
+                "a": ["65010.0", "1", "1.000"],
+                "b": ["64990.0", "1", "1.000"],
+                "c": ["65000.0", "0.5"],
+                "v": ["100", "1234.5"]
+            }
+        });
+        let orderbook = serde_json::json!({
+            "XXBTZUSD": {
+                "asks": [["65010.0", "2.5", "1715760000"], ["65020.0", "1.0", "1715760001"]],
+                "bids": [["64990.0", "3.0", "1715760000"], ["64980.0", "4.0", "1715760001"]]
+            }
+        });
+
+        let output = parse_ticker_table_with_orderbook(&ticker, &orderbook, "XXBTZUSD");
+
+        assert_eq!(output.headers, vec!["Field", "Value"]);
+        assert!(output.rows.contains(&vec!["Ask L1".into(), "65010.0 x 2.5".into()]));
+        assert!(output.rows.contains(&vec!["Bid L2".into(), "64980.0 x 4.0".into()]));
+        assert_eq!(output.data["orderbook"]["asks"][0][0], "65010.0");
     }
 }
