@@ -15,6 +15,7 @@
 
 name: Release
 permissions:
+  packages: write
   "contents": "write"
 
 # This task will run whenever you push a git tag that looks like a version
@@ -113,6 +114,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
     permissions:
+  packages: write
       "attestations": "write"
       "contents": "read"
       "id-token": "write"
