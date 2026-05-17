@@ -1,7 +1,7 @@
 {
   "name": "@ibidathoillah/kraken-cli",
-  "version": "0.3.7",
-  "description": "Unofficial Rust CLI for Kraken (Spot, Margin, Futures)",
+  "version": "0.3.9",
+  "description": "Unofficial AI-native Rust CLI for Kraken Spot, Margin, Futures, and xStocks with built-in MCP server",
   "bin": {
     "kraken": "./bin/kraken.js"
   },

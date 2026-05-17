@@ -1,6 +1,6 @@
 # kraken-cli
 
-Unofficial Rust CLI for Kraken. Use it to inspect markets, manage account data, place spot orders, stream live WebSocket events, run paper trading and futures, and expose the same command surface to agents through MCP.
+Unofficial AI-native Rust CLI for Kraken Spot, Margin, Futures, and xStocks. Use it to inspect markets, manage account data, place orders, stream live WebSocket events, run paper trading, and expose the same command surface to AI agents through MCP.
 
 [![Rust](https://img.shields.io/badge/Rust-2021-000000?logo=rust)](https://www.rust-lang.org/)
 [![CLI](https://img.shields.io/badge/interface-terminal-2f855a)](#quick-start)
