@@ -1,6 +1,6 @@
 [package]
 name = "kraken-cli"
-version = "0.3.9"
+version = "0.3.10"
 edition = "2021"
 description = "Unofficial AI-native Rust CLI for Kraken Spot, Margin, Futures, and xStocks with built-in MCP server"
 license = "MIT"
