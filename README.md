@@ -825,6 +825,16 @@ cargo clippy -- -D warnings    # lint
 
 Bug reports, feature requests, and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+## Related Projects
+
+If you use multiple exchanges, check out these related CLI tools built with the same architecture:
+
+- [indodax-cli](https://github.com/ibidathoillah/indodax-cli) - CLI for Indodax
+- [bittime-cli](https://github.com/ibidathoillah/bittime-cli) - CLI for Bittime
+- [binance-cli](https://github.com/ibidathoillah/binance-cli) - CLI for Binance Spot
+- [tokocrypto-cli](https://github.com/ibidathoillah/tokocrypto-cli) - CLI for Tokocrypto
+- [kraken-cli](https://github.com/ibidathoillah/kraken-cli) - CLI for Kraken (Spot, Margin, Futures)
+
 ## License & Disclaimer
 
 MIT. See [LICENSE](LICENSE).
