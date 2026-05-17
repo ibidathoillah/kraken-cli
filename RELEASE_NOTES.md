@@ -1,8 +1,8 @@
-## 🚀 Welcome to kraken-cli CLI v0.3.2
+## 🚀 Welcome to kraken-cli CLI v0.3.3
 
 The unofficial, fast, and feature-rich command-line interface for **Kraken**.
 
-### 🆕 What's New in v0.3.2
+### 🆕 What's New in v0.3.3
 
 - **🔄 Standardized Workflow**: Aligned with the Indodax-CLI development and release lifecycle.
 - **🛡️ Security**: Improved credential management and SSL/TLS handling.
