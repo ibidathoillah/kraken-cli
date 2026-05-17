@@ -55,7 +55,7 @@ Detects your OS and architecture, downloads the right binary, and installs it. m
 Verify it works:
 
 ```bash
-kraken status && kraken ticker BTCUSD
+kraken status && kraken ticker btc/usd
 ```
 
 Pre-built binaries are also available on the [GitHub Releases](https://github.com/krakenfx/kraken-cli/releases) page.
@@ -84,9 +84,9 @@ One binary covers six asset classes. All trading commands work across asset clas
 
 | Asset class | Instruments | Margin | Flag | Example |
 |---|---|---|---|---|
-| **Crypto spot** | 1,400+ pairs (BTC, ETH, SOL, and hundreds more) | Up to 10x on major pairs | _(default)_ | `kraken order buy BTCUSD 0.001 --type limit --price 50000` |
+| **Crypto spot** | 1,400+ pairs (BTC, ETH, SOL, and hundreds more) | Up to 10x on major pairs | _(default)_ | `kraken order buy btc/usd 0.001 --type limit --price 50000` |
 | **Tokenized U.S. stocks & ETFs ([xStocks](https://www.kraken.com/xstocks))** | 79 assets: AAPL, NVDA, TSLA, GOOGL, AMZN, MSFT, SPY, QQQ, and more | Up to 3x on top 10 | `--asset-class tokenized_asset` | `kraken order buy AAPLx/USD 0.1 --type limit --price 200 --asset-class tokenized_asset` |
-| **Forex** | 11 fiat pairs: EUR/USD, GBP/USD, USD/JPY, AUD/USD, and more | — | `--asset-class forex` | `kraken ticker EURUSD --asset-class forex` |
+| **Forex** | 11 fiat pairs: EUR/USD, GBP/USD, USD/JPY, AUD/USD, and more | — | `--asset-class forex` | `kraken ticker eur/usd --asset-class forex` |
 | **Perpetual futures** | 317 contracts: crypto, 5 forex perps, 11 equity/index perps (AAPL, NVDA, TSLA, SPY, QQQ, S&P 500) | Up to 50x | _(futures engine)_ | `kraken futures order buy PF_XBTUSD 1 --type limit --price 50000` |
 | **Inverse & fixed-date futures** | 20 contracts: BTC, ETH, SOL, LTC, XRP, ADA, DOGE, LINK | Varies | _(futures engine)_ | `kraken futures order buy FI_XBTUSD_260327 1 --type limit --price 50000` |
 | **Earn / staking** | Flexible and bonded strategies across multiple assets | — | — | `kraken earn strategies --asset ETH` |
@@ -156,10 +156,10 @@ Install minisign: `brew install minisign` (macOS) or `apt install minisign` (Lin
 Public market data requires no credentials:
 
 ```bash
-kraken ticker BTCUSD -o json
-kraken orderbook BTCUSD --count 10 -o json
-kraken trades BTCUSD --count 20 -o json
-kraken ohlc BTCUSD --interval 60 -o json
+kraken ticker btc/usd -o json
+kraken orderbook btc/usd --count 10 -o json
+kraken trades btc/usd --count 20 -o json
+kraken ohlc btc/usd --interval 60 -o json
 ```
 
 With authentication:
@@ -170,14 +170,14 @@ export KRAKEN_API_SECRET="your-secret"
 
 kraken balance -o json
 kraken open-orders -o json
-kraken order buy BTCUSD 0.001 --type limit --price 50000 -o json
+kraken order buy btc/usd 0.001 --type limit --price 50000 -o json
 ```
 
 For humans (table output, interactive setup):
 
 ```bash
 kraken setup
-kraken ticker BTCUSD
+kraken ticker btc/usd
 kraken balance
 kraken shell
 ```
@@ -213,7 +213,7 @@ api_key = "your-api-key"
 api_secret = "your-api-secret"
 
 [settings]
-default_pair = "BTCUSD"
+default_pair = "btc/usd"
 output = "table"
 ```
 
@@ -308,8 +308,8 @@ Dangerous tools carry the `destructive_hint` annotation and include `[DANGEROUS:
 The primary output format. Every command returns valid JSON on stdout.
 
 ```bash
-kraken ticker BTCUSD -o json
-# {"BTCUSD":{"a":["67234.10","1","1.000"],"b":["67234.00","1","1.000"],...}}
+kraken ticker btc/usd -o json
+# {"btc/usd":{"a":["67234.10","1","1.000"],"b":["67234.00","1","1.000"],...}}
 ```
 
 WebSocket commands emit NDJSON (one JSON object per line) for streaming.
@@ -322,7 +322,7 @@ Human-readable tables. Default when `-o` is not specified.
 ┌──────────┬──────────┬──────────┬──────────┬────────────┐
 │ Pair     │ Ask      │ Bid      │ Last     │ Volume ... │
 ├──────────┼──────────┼──────────┼──────────┼────────────┤
-│ BTCUSD   │ 67234.10 │ 67234.00 │ 67234.10 │ 1234.56    │
+│ btc/usd   │ 67234.10 │ 67234.00 │ 67234.10 │ 1234.56    │
 └──────────┴──────────┴──────────┴──────────┴────────────┘
 ```
 
@@ -392,7 +392,7 @@ kraken balance -o json -v 2>/dev/null | jq .
 | `kraken status` | System status |
 | `kraken server-time` | Server time |
 | `kraken assets [--asset BTC,ETH] [--asset-class CLASS]` | Asset info |
-| `kraken pairs [--pair BTCUSD] [--asset-class CLASS]` | Tradable pairs |
+| `kraken pairs [--pair btc/usd] [--asset-class CLASS]` | Tradable pairs |
 | `kraken ticker <PAIR...> [--asset-class tokenized_asset\|forex]` | Ticker data |
 | `kraken ohlc <PAIR> [--interval 60] [--asset-class tokenized_asset\|forex]` | OHLC candles |
 | `kraken orderbook <PAIR> [--count 25] [--asset-class tokenized_asset]` | L2 order book |
@@ -417,7 +417,7 @@ kraken balance -o json -v 2>/dev/null | jq .
 | `kraken positions [--txid ID] [--show-pnl] [--consolidation market] [--rebase-multiplier rebased\|base]` | Open positions |
 | `kraken ledgers [--asset BTC --type trade] [--asset-class CLASS] [--start TS] [--end TS] [--offset N] [--without-count] [--rebase-multiplier rebased\|base]` | Ledger entries |
 | `kraken query-ledgers <ID...> [--trades] [--rebase-multiplier rebased\|base]` | Query specific ledger entries |
-| `kraken volume [--pair BTCUSD] [--rebase-multiplier rebased\|base]` | Trade volume & fees |
+| `kraken volume [--pair btc/usd] [--rebase-multiplier rebased\|base]` | Trade volume & fees |
 | `kraken export-report --report trades --description "desc" [--format CSV\|TSV] [--fields F] [--starttm TS] [--endtm TS]` | Request export |
 | `kraken export-status --report trades` | Export status |
 | `kraken export-retrieve <ID>` | Download export |
@@ -605,8 +605,8 @@ The command interface has near-parity with live spot trading. Switch between pap
 
 ```bash
 kraken paper init --balance 10000 -o json
-kraken paper buy BTCUSD 0.01 -o json
-kraken paper sell BTCUSD 0.005 --type limit --price 70000 -o json
+kraken paper buy btc/usd 0.01 -o json
+kraken paper sell btc/usd 0.005 --type limit --price 70000 -o json
 kraken paper status -o json
 kraken paper reset -o json
 ```
@@ -615,7 +615,7 @@ kraken paper reset -o json
 
 ```bash
 kraken paper init --balance 5000 --currency EUR
-kraken paper buy BTCUSD 0.01
+kraken paper buy btc/usd 0.01
 kraken paper balance
 kraken paper status
 kraken paper orders
@@ -651,7 +651,7 @@ Successful JSON responses include `"mode": "futures_paper"`. Most table views ar
 ```bash
 kraken futures paper init --balance 10000 -o json
 kraken futures paper buy PF_XBTUSD 1 --leverage 10 --type market -o json
-kraken futures paper sell PF_ETHUSD 5 --leverage 20 --type market -o json
+kraken futures paper sell PF_eth/usd 5 --leverage 20 --type market -o json
 kraken futures paper positions -o json
 kraken futures paper status -o json
 kraken futures paper reset -o json
@@ -697,8 +697,8 @@ Prices come from the public Kraken Futures Ticker API (no auth needed). Taker fe
 ### Conditional order based on live price
 
 ```bash
-PRICE=$(kraken ticker BTCUSD -o json | jq -r '.[].c[0]')
-kraken order buy BTCUSD 0.001 --type limit --price "$PRICE" -o json
+PRICE=$(kraken ticker btc/usd -o json | jq -r '.[].c[0]')
+kraken order buy btc/usd 0.001 --type limit --price "$PRICE" -o json
 ```
 
 ### Portfolio rebalance check
@@ -707,7 +707,7 @@ kraken order buy BTCUSD 0.001 --type limit --price "$PRICE" -o json
 BTC=$(kraken balance -o json | jq -r '.BTC // "0"')
 
 if [ "$(echo "$BTC > 0.001" | bc)" -eq 1 ]; then
-  kraken order sell BTCUSD 0.001 --type market -o json
+  kraken order sell btc/usd 0.001 --type market -o json
 fi
 ```
 
