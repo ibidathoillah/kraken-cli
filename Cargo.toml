@@ -1,6 +1,6 @@
 [package]
 name = "kraken-cli"
-version = "0.3.10"
+version = "0.3.11"
 edition = "2021"
 description = "Unofficial AI-native Rust CLI for Kraken Spot, Margin, Futures, and xStocks with built-in MCP server"
 license = "MIT"
@@ -25,7 +25,7 @@ sha2 = "0.10"
 base64 = "0.22"
 url = "2"
 chrono = { version = "0.4", features = ["serde"] }
-tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-native-roots"] }
 rustls = { version = "0.23", default-features = false }
 futures-util = "0.3"
 anyhow = "1"
