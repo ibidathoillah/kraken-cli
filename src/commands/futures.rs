@@ -350,14 +350,14 @@ pub(crate) async fn execute(
         }
         FuturesCommand::Ticker { symbol } => {
             validate_path_segment(symbol, "symbol")?;
-            let endpoint = format!("tickers/{symbol}");
+            let endpoint = format!("tickers/{}", crate::normalize_pair(symbol)");
             let data = client.public_get(&endpoint, &[], verbose).await?;
             Ok(parse_ticker(&data))
         }
         FuturesCommand::Orderbook { symbol } => {
             validate_path_segment(symbol, "symbol")?;
             let data = client
-                .public_get("orderbook", &[("symbol", symbol.as_str())], verbose)
+                .public_get("orderbook", &[("symbol", crate::normalize_pair(symbol).as_str())], verbose)
                 .await?;
             Ok(parse_orderbook(&data))
         }
@@ -367,7 +367,7 @@ pub(crate) async fn execute(
             before,
         } => {
             validate_path_segment(symbol, "symbol")?;
-            let mut params: Vec<(&str, &str)> = vec![("symbol", symbol.as_str())];
+            let mut params: Vec<(&str, &str)> = vec![("symbol", crate::normalize_pair(symbol).as_str())];
             let since_owned;
             if let Some(s) = since {
                 since_owned = s.clone();
@@ -414,7 +414,7 @@ pub(crate) async fn execute(
         }
         FuturesCommand::HistoricalFundingRates { symbol } => {
             validate_path_segment(symbol, "symbol")?;
-            let params = [("symbol", symbol.as_str())];
+            let params = [("symbol", crate::normalize_pair(symbol).as_str())];
             let data = client
                 .public_get("historical-funding-rates", &params, verbose)
                 .await?;
@@ -1186,7 +1186,7 @@ fn parse_trade_history(data: &Value) -> CommandOutput {
     CommandOutput::new(data.clone(), headers, rows)
 }
 
-/// Parse single-ticker response (GET tickers/{symbol}) into Symbol | Last | Bid | Ask | Vol24h table.
+/// Parse single-ticker response (GET tickers/{}) into Symbol | Last | Bid | Ask | Vol24h table.
 fn parse_ticker(data: &Value) -> CommandOutput {
     let headers = vec![
         "Symbol".into(),

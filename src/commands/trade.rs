@@ -546,6 +546,7 @@ fn build_order_params(
     validate: bool,
     asset_class: &Option<String>,
 ) -> Result<HashMap<String, String>> {
+    params.insert("pair".into(), crate::normalize_pair(pair));
     let valid_types = [
         "market",
         "limit",

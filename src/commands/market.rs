@@ -178,7 +178,7 @@ pub(crate) async fn execute(
             Ok(CommandOutput::new(data, headers, rows))
         }
         MarketCommand::Ticker { pairs, asset_class } => {
-            let pair_str = pairs.join(",");
+            let pair_str = pairs.iter().map(|p| crate::normalize_pair(p)).collect::<Vec<_>>().join(",");
             let mut params = vec![("pair", &*pair_str)];
             if let Some(ac) = asset_class {
                 params.push(("asset_class", ac.as_str()));
@@ -194,7 +194,7 @@ pub(crate) async fn execute(
             asset_class,
         } => {
             let interval_str = interval.to_string();
-            let mut params = vec![("pair", pair.as_str()), ("interval", &interval_str)];
+            let mut params = vec![("pair", crate::normalize_pair(pair).as_str()), ("interval", &interval_str)];
             if let Some(s) = since {
                 params.push(("since", s.as_str()));
             }
@@ -211,7 +211,7 @@ pub(crate) async fn execute(
             asset_class,
         } => {
             let count_str = count.to_string();
-            let mut params = vec![("pair", pair.as_str()), ("count", &count_str)];
+            let mut params = vec![("pair", crate::normalize_pair(pair).as_str()), ("count", &count_str)];
             if let Some(ac) = asset_class {
                 params.push(("asset_class", ac.as_str()));
             }
@@ -227,7 +227,7 @@ pub(crate) async fn execute(
             depth,
             grouping,
         } => {
-            let mut params = vec![("pair", pair.as_str()), ("depth", depth.as_str())];
+            let mut params = vec![("pair", crate::normalize_pair(pair).as_str()), ("depth", depth.as_str())];
             if grouping != "1" {
                 params.push(("grouping", grouping.as_str()));
             }
@@ -247,7 +247,7 @@ pub(crate) async fn execute(
             asset_class,
         } => {
             let count_str = count.to_string();
-            let mut params = vec![("pair", pair.as_str()), ("count", &count_str)];
+            let mut params = vec![("pair", crate::normalize_pair(pair).as_str()), ("count", &count_str)];
             if let Some(s) = since {
                 params.push(("since", s.as_str()));
             }
@@ -263,7 +263,7 @@ pub(crate) async fn execute(
             since,
             asset_class,
         } => {
-            let mut params = vec![("pair", pair.as_str())];
+            let mut params = vec![("pair", crate::normalize_pair(pair).as_str())];
             if let Some(s) = since {
                 params.push(("since", s.as_str()));
             }

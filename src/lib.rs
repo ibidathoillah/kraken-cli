@@ -1,4 +1,7 @@
 /// Kraken CLI library crate.
+pub(crate) fn normalize_pair(pair: &str) -> String {
+    pair.replace(['_', '-', '/'], "").to_uppercase()
+}
 ///
 /// Provides `AppContext`, the shared dispatcher, and all modules. This
 /// intentional deviation from the spec layout ensures the exact same execution
