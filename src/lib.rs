@@ -1,5 +1,5 @@
 /// Kraken CLI library crate.
-pub(crate) fn normalize_pair(pair: &str) -> String {
+pub fn normalize_pair(pair: &str) -> String {
     pair.replace(['_', '-', '/'], "").to_uppercase()
 }
 ///
@@ -12,6 +12,7 @@ pub mod client;
 pub(crate) mod commands;
 pub mod config;
 pub mod errors;
+pub mod integration;
 pub(crate) mod futures_paper;
 pub(crate) mod mcp;
 pub mod output;
@@ -35,6 +36,8 @@ use commands::utility;
 use commands::websocket::{self as ws, WsCommand};
 use errors::Result;
 use output::{render, CommandOutput, OutputFormat};
+
+pub use integration::prelude;
 
 /// Runtime context assembled from global CLI flags and config.
 pub struct AppContext {
