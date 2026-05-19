@@ -350,7 +350,7 @@ pub(crate) async fn execute(
         }
         FuturesCommand::Ticker { symbol } => {
             validate_path_segment(symbol, "symbol")?;
-            let endpoint = format!("tickers/{}", crate::normalize_pair(symbol)");
+            let endpoint = format!("tickers/{}", crate::normalize_pair(symbol));
             let data = client.public_get(&endpoint, &[], verbose).await?;
             Ok(parse_ticker(&data))
         }
@@ -367,7 +367,8 @@ pub(crate) async fn execute(
             before,
         } => {
             validate_path_segment(symbol, "symbol")?;
-            let mut params: Vec<(&str, &str)> = vec![("symbol", crate::normalize_pair(symbol).as_str())];
+            let normalized_symbol = crate::normalize_pair(symbol);
+            let mut params: Vec<(&str, &str)> = vec![("symbol", normalized_symbol.as_str())];
             let since_owned;
             if let Some(s) = since {
                 since_owned = s.clone();
@@ -414,7 +415,8 @@ pub(crate) async fn execute(
         }
         FuturesCommand::HistoricalFundingRates { symbol } => {
             validate_path_segment(symbol, "symbol")?;
-            let params = [("symbol", crate::normalize_pair(symbol).as_str())];
+            let normalized_symbol = crate::normalize_pair(symbol);
+            let params = [("symbol", normalized_symbol.as_str())];
             let data = client
                 .public_get("historical-funding-rates", &params, verbose)
                 .await?;
